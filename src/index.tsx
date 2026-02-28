@@ -3,15 +3,9 @@ import { useCallback, useMemo, useState } from "react";
 import { List, getPreferenceValues } from "@raycast/api";
 
 import { ResultItem } from "@/components/ResultItem";
-import { useCompatPrefetch } from "@/hooks/use-compat-prefetch";
 import { useSearch } from "@/hooks/use-search";
 import { SUPPORTED_LANGUAGES, isSupportedLanguage } from "@/lib/mdn";
 import type { SupportedLanguage } from "@/lib/mdn";
-
-type CommandPreferences = {
-  defaultAction?: "preview" | "open";
-  language?: string;
-};
 
 const LANGUAGE_LABELS: Record<SupportedLanguage, string> = {
   "en-US": "English (US)",
@@ -29,7 +23,7 @@ export default function MDNSearchResultsList() {
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const preferences = getPreferenceValues<CommandPreferences>();
+  const preferences = getPreferenceValues<Preferences.Index>();
   const preferredAction = preferences.defaultAction === "open" ? "open" : "preview";
   const defaultLanguage = isSupportedLanguage(preferences.language) ? preferences.language : "en-US";
   const [language, setLanguage] = useState<SupportedLanguage>(defaultLanguage);
@@ -40,9 +34,7 @@ export default function MDNSearchResultsList() {
     return data.find((item) => item.id === selectedId) ?? data[0];
   }, [data, selectedId]);
 
-  const compatByPath = useCompatPrefetch(selectedResult);
-
-  const handleReloadSearchIndex = useCallback(() => {
+  const handleReloadSearchResults = useCallback(() => {
     void revalidate();
   }, [revalidate]);
 
@@ -78,8 +70,7 @@ export default function MDNSearchResultsList() {
           locale={language}
           preferredAction={preferredAction}
           selected={result.id === selectedResult?.id}
-          compat={compatByPath[result.path]}
-          onReloadSearchIndex={handleReloadSearchIndex}
+          onReloadSearchResults={handleReloadSearchResults}
         />
       ))}
     </List>

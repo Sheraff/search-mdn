@@ -17,11 +17,6 @@ export type MdnKind =
   | "manifest"
   | "webdriver";
 
-export type MdnSearchIndexItem = {
-  title: string;
-  url: string;
-};
-
 export type BrowserSupportRow = {
   browserId: string;
   browserName: string;

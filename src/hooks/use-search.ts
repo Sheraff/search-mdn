@@ -1,6 +1,5 @@
-import fetch from "node-fetch";
 import { URL } from "node:url";
-import { useMemo, useRef } from "react";
+import { useRef } from "react";
 
 import { useCachedPromise } from "@raycast/utils";
 
@@ -57,7 +56,7 @@ function buildResult(document: MdnSearchDocument): Result | undefined {
 
 export const useSearch = (query: string, locale: string) => {
   const abortable = useRef<AbortController>();
-  const searchUrl = useMemo(() => buildSearchUrl(query.trim(), locale), [query, locale]);
+  const searchUrl = buildSearchUrl(query.trim(), locale);
 
   const {
     data: results,
@@ -96,9 +95,7 @@ export const useSearch = (query: string, locale: string) => {
     },
   );
 
-  const data = useMemo(() => {
-    return searchUrl ? results ?? [] : [];
-  }, [results, searchUrl]);
+  const data = searchUrl ? results ?? [] : [];
 
   return { isLoading: Boolean(searchUrl) && isLoading, data, revalidate, error };
 };

@@ -1,9 +1,9 @@
-import { memo } from "react";
+import { memo, useEffect, useState } from "react";
 
 import { Action, ActionPanel, Icon, List } from "@raycast/api";
 
 import { Details } from "@/components/Details";
-import { getBaselineBadge, getBrowserIcon } from "@/lib/compat";
+import { getBaselineBadge, getBrowserIcon, getCompat, readCachedCompat } from "@/lib/compat";
 import { getMdnKindIcon, getMdnKindLabel } from "@/lib/mdn";
 import type { CompatMatch, Result } from "@/types";
 
@@ -12,8 +12,7 @@ type ResultItemProps = {
   locale: string;
   preferredAction: "preview" | "open";
   selected: boolean;
-  compat: CompatMatch | null | undefined;
-  onReloadSearchIndex: () => void;
+  onReloadSearchResults: () => void;
 };
 
 function getMetadata(result: Result, compat: CompatMatch | null | undefined) {
@@ -68,14 +67,39 @@ function getMetadata(result: Result, compat: CompatMatch | null | undefined) {
   );
 }
 
-function ResultItemComponent({
-  result,
-  locale,
-  preferredAction,
-  selected,
-  compat,
-  onReloadSearchIndex,
-}: ResultItemProps) {
+function ResultItemComponent({ result, locale, preferredAction, selected, onReloadSearchResults }: ResultItemProps) {
+  const [compat, setCompat] = useState<CompatMatch | null | undefined>(undefined);
+
+  useEffect(() => {
+    if (!selected || compat !== undefined) {
+      return;
+    }
+
+    const cached = readCachedCompat(result.path);
+    if (cached !== undefined) {
+      setCompat(cached);
+      return;
+    }
+
+    let cancelled = false;
+
+    const run = async () => {
+      const resolved = await getCompat(result.path);
+
+      if (cancelled) {
+        return;
+      }
+
+      setCompat(resolved ?? null);
+    };
+
+    void run();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [compat, result.path, selected]);
+
   return (
     <List.Item
       id={result.id}
@@ -108,7 +132,7 @@ function ResultItemComponent({
             <Action
               title="Reload Search Results"
               icon={Icon.ArrowClockwise}
-              onAction={onReloadSearchIndex}
+              onAction={onReloadSearchResults}
               shortcut={{ modifiers: ["cmd"], key: "r" }}
             />
           </ActionPanel>
@@ -118,4 +142,14 @@ function ResultItemComponent({
   );
 }
 
-export const ResultItem = memo(ResultItemComponent);
+function arePropsEqual(previous: ResultItemProps, next: ResultItemProps): boolean {
+  return (
+    previous.result.id === next.result.id &&
+    previous.selected === next.selected &&
+    previous.locale === next.locale &&
+    previous.preferredAction === next.preferredAction &&
+    previous.onReloadSearchResults === next.onReloadSearchResults
+  );
+}
+
+export const ResultItem = memo(ResultItemComponent, arePropsEqual);
