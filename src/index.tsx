@@ -40,7 +40,7 @@ export default function MDNSearchResultsList() {
     return data.find((item) => item.id === selectedId) ?? data[0];
   }, [data, selectedId]);
 
-  const compatByPath = useCompatPrefetch(data, selectedResult);
+  const compatByPath = useCompatPrefetch(selectedResult);
 
   const handleReloadSearchIndex = useCallback(() => {
     void revalidate();
@@ -77,6 +77,7 @@ export default function MDNSearchResultsList() {
           result={result}
           locale={language}
           preferredAction={preferredAction}
+          selected={result.id === selectedResult?.id}
           compat={compatByPath[result.path]}
           onReloadSearchIndex={handleReloadSearchIndex}
         />

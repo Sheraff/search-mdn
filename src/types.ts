@@ -44,7 +44,7 @@ export type Result = {
   title: string;
   url: string;
   path: string;
-  summary: string;
+  summary?: string;
   kind: MdnKind;
 };
 

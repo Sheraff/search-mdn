@@ -11,6 +11,7 @@ type ResultItemProps = {
   result: Result;
   locale: string;
   preferredAction: "preview" | "open";
+  selected: boolean;
   compat: CompatMatch | null | undefined;
   onReloadSearchIndex: () => void;
 };
@@ -67,42 +68,51 @@ function getMetadata(result: Result, compat: CompatMatch | null | undefined) {
   );
 }
 
-function ResultItemComponent({ result, locale, preferredAction, compat, onReloadSearchIndex }: ResultItemProps) {
+function ResultItemComponent({
+  result,
+  locale,
+  preferredAction,
+  selected,
+  compat,
+  onReloadSearchIndex,
+}: ResultItemProps) {
   return (
     <List.Item
       id={result.id}
       title={result.title}
       icon={getMdnKindIcon(result.kind)}
-      detail={<List.Item.Detail metadata={getMetadata(result, compat)} />}
+      detail={selected ? <List.Item.Detail metadata={getMetadata(result, compat)} /> : undefined}
       actions={
-        <ActionPanel>
-          {preferredAction === "open" ? (
-            <>
-              <Action.OpenInBrowser title="Open in Browser" url={result.url} />
-              <Action.Push
-                icon={Icon.Document}
-                title="Read Document"
-                target={<Details result={result} locale={locale} />}
-              />
-            </>
-          ) : (
-            <>
-              <Action.Push
-                icon={Icon.Document}
-                title="Read Document"
-                target={<Details result={result} locale={locale} />}
-              />
-              <Action.OpenInBrowser title="Open in Browser" url={result.url} />
-            </>
-          )}
-          <Action.CopyToClipboard title="Copy URL" content={result.url} shortcut={{ modifiers: ["cmd"], key: "." }} />
-          <Action
-            title="Reload Search Index"
-            icon={Icon.ArrowClockwise}
-            onAction={onReloadSearchIndex}
-            shortcut={{ modifiers: ["cmd"], key: "r" }}
-          />
-        </ActionPanel>
+        selected ? (
+          <ActionPanel>
+            {preferredAction === "open" ? (
+              <>
+                <Action.OpenInBrowser title="Open in Browser" url={result.url} />
+                <Action.Push
+                  icon={Icon.Document}
+                  title="Read Document"
+                  target={<Details result={result} locale={locale} />}
+                />
+              </>
+            ) : (
+              <>
+                <Action.Push
+                  icon={Icon.Document}
+                  title="Read Document"
+                  target={<Details result={result} locale={locale} />}
+                />
+                <Action.OpenInBrowser title="Open in Browser" url={result.url} />
+              </>
+            )}
+            <Action.CopyToClipboard title="Copy URL" content={result.url} shortcut={{ modifiers: ["cmd"], key: "." }} />
+            <Action
+              title="Reload Search Results"
+              icon={Icon.ArrowClockwise}
+              onAction={onReloadSearchIndex}
+              shortcut={{ modifiers: ["cmd"], key: "r" }}
+            />
+          </ActionPanel>
+        ) : undefined
       }
     />
   );
